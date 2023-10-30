@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="22f94120-abb1-4127-8be9-08e3718bb420" name="更改" comment="">
+      <change afterPath="$PROJECT_DIR$/data/data_file.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/data_file_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/log_record.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/log_record_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/db.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/db_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/errors.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hades.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/index/btree.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/index/btree_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/index/index.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ioselector/file_io.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ioselector/file_io_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ioselector/io_selector.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/logger/logger.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/logger/logger_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/utils/rand_kv.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/utils/rand_kv_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/redis/client/client.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/redis/parser/parser.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/redis/server/server.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/settings/settings.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/settings/settings_test.go" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
+  </component>
+  <component name="GOROOT" url="file:///usr/local/go" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2XQv8SPhdPusVgFFXgxxApUgSNg" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultGoTemplateProperty": "Go File",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.migrated.go.modules.settings": "true",
+    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "go.import.settings.migrated": "true",
+    "go.sdk.automatically.set": "true",
+    "last_opened_file_path": "/Users/luhongcheng",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/index" />
+      <recent name="$PROJECT_DIR$/ioselector" />
+      <recent name="$PROJECT_DIR$/interface/ioselector" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/settings" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Go 测试.hades/lib/utils 中的 TestRandomValue">
+    <configuration name="hades 中的 TestOpen" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="hades" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="hades" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestOpen\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="hades/data 中的 TestDataFile_ReadLogRecord" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="hades" />
+      <working_directory value="$PROJECT_DIR$/data" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="hades/data" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestDataFile_ReadLogRecord\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="hades/data 中的 TestDataFile_Write" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="hades" />
+      <working_directory value="$PROJECT_DIR$/data" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="hades/data" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestDataFile_Write\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="hades/lib/utils 中的 TestGetTestKey" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="hades" />
+      <working_directory value="$PROJECT_DIR$/lib/utils" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="hades/lib/utils" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestGetTestKey\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="hades/lib/utils 中的 TestRandomValue" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="hades" />
+      <working_directory value="$PROJECT_DIR$/lib/utils" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="hades/lib/utils" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestRandomValue\E$" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go 测试.hades/lib/utils 中的 TestRandomValue" />
+        <item itemvalue="Go 测试.hades/lib/utils 中的 TestGetTestKey" />
+        <item itemvalue="Go 测试.hades 中的 TestOpen" />
+        <item itemvalue="Go 测试.hades/data 中的 TestDataFile_ReadLogRecord" />
+        <item itemvalue="Go 测试.hades/data 中的 TestDataFile_Write" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="应用程序级" UseSingleDictionary="true" transferred="true" />
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VgoProject">
+    <settings-migrated>true</settings-migrated>
+  </component>
+</project>

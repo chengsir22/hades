@@ -1,0 +1,3 @@
+2023/10/29 23:25:25 [INFO][logger_test.go:12] hello
+2023/10/29 23:26:25 [INFO][logger_test.go:14] hello
+2023/10/29 23:26:25 [INFO][logger_test.go:15] hello world

@@ -1,0 +1,16 @@
+name: "hades"
+mode: "dev"
+version: "0.0.1"
+bind: "0.0.0.0"
+port: 6388
+maxClients: 128
+db:
+  dirPath: "./"
+  dataFileSize: 268435456  # 256MB
+  syncWrites: false # 每次写数据是否持久化
+  indexType: 1  # 索引类型
+log:
+  path: "logs"
+  name: "hades"
+  ext: "log"
+  timeFormat: "2006-01-02"
