@@ -7,29 +7,49 @@ import (
 )
 
 type AppConfig struct {
-	Name       string `mapstructure:"name"`
-	Mode       string `mapstructure:"mode"`
-	Version    string `mapstructure:"version"`
-	Bind       string `mapstructure:"bind"`
-	Port       int    `mapstructure:"port"`
-	MaxClients int    `mapstructure:"maxClients"`
-	*DBConfig  `mapstructure:"db"`
-	*LogConfig `mapstructure:"log"`
+	Name              string `mapstructure:"name"`
+	Mode              string `mapstructure:"mode"`
+	Version           string `mapstructure:"version"`
+	Bind              string `mapstructure:"bind"`
+	Port              int    `mapstructure:"port"`
+	MaxClients        int    `mapstructure:"maxClients"`
+	*DBConfig         `mapstructure:"db"`
+	*IteratorConfig   `mapstructure:"iterator"`
+	*WriteBatchConfig `mapstructure:"writeBatch"`
+	*LogConfig        `mapstructure:"log"`
 }
 
 type DBConfig struct {
-	DirPath      string      `mapstructure:"dirPath"`      // 数据库数据目录
-	DataFileSize int64       `mapstructure:"dataFileSize"` // 数据文件大小
-	SyncWrites   bool        `mapstructure:"syncWrites"`   // 是否同步写入
-	IndexType    IndexerType `mapstructure:"indexType"`    // 索引类型
+	DirPath            string      `mapstructure:"dirPath"`            // 数据库数据目录
+	DataFileSize       int64       `mapstructure:"dataFileSize"`       // 数据文件大小
+	SyncWrites         bool        `mapstructure:"syncWrites"`         // 是否同步写入
+	BytesPerSync       uint        `mapstructure:"bytesPerSync"`       // 每写入多少字节进行一次 sync 操作
+	IndexType          IndexerType `mapstructure:"indexType"`          // 索引类型
+	MMapAtStartup      bool        `mapstructure:"mmapAtStartup"`      // 启动时是否使用 MMap 加载数据
+	DataFileMergeRatio float32     `mapstructure:"dataFileMergeRatio"` //	数据文件合并的阈值
 }
 
 type IndexerType = int8
 
 const (
-	BTree IndexerType = iota + 1 // BTree 索引
-	ART                          // ART Adpative Radix Tree 自适应基数树索引
+	BTree     IndexerType = iota + 1 // BTree 索引
+	ART                              // ART Adpative Radix Tree 自适应基数树索引
+	BPlusTree                        // BPlusTree B+ 树索引，将索引存储到磁盘上
 )
+
+// IteratorConfig 索引迭代器配置项
+type IteratorConfig struct {
+	// 遍历前缀为指定值的 Key，默认为空
+	Prefix []byte
+	// 是否反向遍历，默认 false 是正向
+	Reverse bool `mapstructure:"reverse"`
+}
+
+// WriteBatchConfig 批量写配置项
+type WriteBatchConfig struct {
+	MaxBatchNum uint `mapstructure:"maxBatchNum"` // 一个批次当中最大的数据量10000
+	SyncWrites  bool `mapstructure:"syncWrites"`  // 提交时是否 sync 持久化 true
+}
 
 // LogConfig  stores config for logger
 type LogConfig struct {

@@ -11,4 +11,7 @@ func TestInit(t *testing.T) {
 	assert.Equal(t, "hades", Conf.Name)
 	assert.Equal(t, "log", Conf.LogConfig.Ext)
 	assert.Equal(t, int8(1), Conf.DBConfig.IndexType)
+	assert.Nil(t, Conf.IteratorConfig.Prefix)
+	assert.Equal(t, false, Conf.IteratorConfig.Reverse)
+	//t.Log(Conf.IteratorConfig.Prefix)
 }
