@@ -5,49 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="22f94120-abb1-4127-8be9-08e3718bb420" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/batch.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/batch_test.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/benchmark/bench_test.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/http/main.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/index/art.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/index/art_test.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/index/bptree.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/index/bptree_test.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ioselector/mmap.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ioselector/mmap_test.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/iterator.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/iterator_test.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/utils/file.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/utils/file_test.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/utils/float.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/merge.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/merge_test.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/redis/cmd/client.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/redis/cmd/server.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/redis/generic.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/redis/meta.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/redis/types.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/redis/types_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/index/skiplist.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/data_file.go" beforeDir="false" afterPath="$PROJECT_DIR$/data/data_file.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/data_file_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/data/data_file_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/log_record.go" beforeDir="false" afterPath="$PROJECT_DIR$/data/log_record.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/db.go" beforeDir="false" afterPath="$PROJECT_DIR$/db.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/db_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/db_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/errors.go" beforeDir="false" afterPath="$PROJECT_DIR$/errors.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hades.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/hades.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/index/btree.go" beforeDir="false" afterPath="$PROJECT_DIR$/index/btree.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/index/btree_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/index/btree_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/index/index.go" beforeDir="false" afterPath="$PROJECT_DIR$/index/index.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ioselector/io_selector.go" beforeDir="false" afterPath="$PROJECT_DIR$/ioselector/io_selector.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/redis/client/client.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/redis/parser/parser.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/redis/server/server.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/settings/settings.go" beforeDir="false" afterPath="$PROJECT_DIR$/settings/settings.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/settings/settings_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/settings/settings_test.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,6 +29,9 @@
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 3
+}]]></component>
   <component name="ProjectId" id="2XQv8SPhdPusVgFFXgxxApUgSNg" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
@@ -76,23 +40,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;DefaultGoTemplateProperty&quot;: &quot;Go File&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
-    &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/luhongcheng/Campus_Recruitment_Preparation/_proj/hades/redis/cmd&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultGoTemplateProperty": "Go File",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.migrated.go.modules.settings": "true",
+    "RunOnceActivity.go.modules.automatic.dependencies.download": "true",
+    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "go.import.settings.migrated": "true",
+    "go.sdk.automatically.set": "true",
+    "last_opened_file_path": "/Users/luhongcheng/daydayUp/_proj/hades",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/redis/cmd" />

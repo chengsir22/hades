@@ -36,6 +36,7 @@ const (
 	ART
 	// BPTree B+ 树索引
 	BPTree
+	Skiplist
 )
 
 // NewIndexer 根据类型初始化索引
