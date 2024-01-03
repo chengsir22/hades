@@ -1,50 +1,160 @@
 # Hades
 
-go实现bitcask KV存储，兼容redis协议
+论文：https://riak.com/assets/bitcask-intro.pdf
+
+go实现基于bitcask模型，兼容redis数据结构和协议的高性能kv存储引擎
 
 ## 整体架构
 
-<img src="./assets/(null)-20231112114334991.(null)" alt="img" style="zoom:50%;" />
+![img](./assets/(null)-20240103193706385.(null))<img src="./assets/(null)-20240103193706429.(null)" alt="img" style="zoom:50%;" />
 
-**内存设计** 内存索引 可以选择BTree、跳表、红黑树等，统一提供抽象接口Indexer，支持Put、Get、Delete
+bitcask 是一种高性能的持久化存储引擎，其基本原理是采用了预写日志的数据存储方式，每一条数据在写入时首先会追加写入到数据文件中，然后更新内存索引，内存索引存储了 Key 和 Value 在磁盘上的位置，读取数据时，会先从内存中根据 kev 找到对应 Value 的位置，然后再从磁盘中取出实际的 Value。基于这种模型，其读写性能都非常高效快速，因为每次写入实际上都是一次顺序IO 操作，然后更新内存。每次读取也是直接从内存中找到对应数据在磁盘上的位置。
 
-**磁盘设计** 定义IOSelector接口，讲IO操作的接口进行抽象、方便接入不同IO类型，用于fileio和mmap的io选择器，对标准文件操作api例如read、write、sync、close、delete进行封装
+**内存****设计** 内存索引 可以选择BTree、跳表、红黑树等（这里实现跳表，简单点😊），统一提供抽象接口Indexer，支持Put、Get、Delete
 
-**数据库启动** 启动流程主要的步骤有两个，一是加载数据目录中的文件，打开其文件描述符，二是遍历数据文件中的内容，构建内存索引。
+**磁盘设计** 定义IOSelector接口，将IO操作的接口进行抽象、方便接入不同IO类型，用于fileio和mmap的io选择器，对标准文件操作api例如read、write、sync、close、delete进行封装
+
+## 内存索引-skiplist
+
+跳表的实现方式很多，这里实现一个简单的，实现可以参考 [Golang 实现 Redis(5): 使用跳表实现 SortedSet - -Finley- - 博客园](https://www.cnblogs.com/Finley/p/12854599.html) [注意不同redis 跳表 key是score int，kv里的key就是string值]
+
+![img](./assets/(null)-20240103193706354.(null))
+
+```Go
+type Node struct {
+    key     []byte
+    value   interface{}
+    forward []*Node // 各层的下一个指针
+}
+
+type SkipList struct {
+    head   *Node
+    level  int16
+    length int
+    lock   *sync.RWMutex
+}
+```
+
+![img](./assets/(null)-20240103193706451.(null))
+
+```C++
+// Put 向索引中存储 key 对应的数据位置信息, 如果键已存在，更新值并返回旧值
+func (sl *SkipList) Put(key []byte, pos *data.LogRecordPos) *data.LogRecordPos {
+    sl.lock.Lock()
+    defer sl.lock.Unlock()
+
+    update := make([]*Node, maxLevel) // 记录每层需要更新的节点
+    current := sl.head
+
+    // 从最高层开始查找 【关键代码】
+    for i := sl.level - 1; i >= 0; i-- {
+        // 在当前层查找插入位置
+        for current.forward[i] != nil && bytes.Compare(current.forward[i].key, key) < 0 {
+            current = current.forward[i] // current.forward[i].key < key
+        }
+        update[i] = current
+    }
+
+    if current.forward[0] != nil && bytes.Equal(current.forward[0].key, key) {
+        // 如果键已存在，更新值并返回旧值
+        oldVal := current.forward[0].value
+        current.forward[0].value = pos
+        return oldVal.(*data.LogRecordPos)
+    }
+
+    level := randomLevel()
+    if level > sl.level {
+        // 如果新节点的层数大于当前层数，需要更新 update 切片
+        for i := sl.level; i < level; i++ {
+            update[i] = sl.head
+        }
+        sl.level = level
+    }
+
+    newNode := newNode(key, pos, level)
+    for i := int16(0); i < level; i++ {
+        // 更新节点的各层指针
+        newNode.forward[i] = update[i].forward[i]
+        update[i].forward[i] = newNode
+    }
+    sl.length++
+    return nil
+}
+```
+
+节点level纯随机有弊端，思考 可以将热点数据增加level，冷数据降低level
+
+## 读写数据
+
+```Go
+type LogRecord struct {
+    Key   []byte
+    Value []byte
+    Type  LogRecordType
+}
+```
+
+logrecord序列化为encRecord，追加数据到活跃文件，如果活跃文件为空，则创建活跃文件（数据库初始化时），如果活跃文件WriteOff+len(encRecord)>=文件阀值DataFileSize，则持久化当前活跃文件为旧文件，创建新的活跃文件；将encRecord写入活跃文件。
 
 删除流程 删除只是将内存索引删除了，磁盘中新增一条带墓碑值的LogRecord，并未实际删除磁盘数据（merge时才真正删除）
 
-**读取LogRecord** Header 部分的数据中，crc 占4字节，type 占一个字节，key size和value size 是变长的，从数据文件中读取的时候，我们会取最大的 header字节数，反序列化的时候，如果解码 key size和 value size 之后还有多余的字节，会自动忽略。
+## **数据库启动** 
+
+启动流程主要的步骤有两个，一是加载数据目录中的文件，打开其文件描述符，二是遍历数据文件中的内容，构建内存索引。
+
+### **读取LogRecord**
+
+Header 部分的数据中，crc 占4字节，type 占一个字节，key size和value size 是变长的，从数据文件中读取的时候，我们会取最大的 header字节数，反序列化的时候，如果解码 key size和 value size 之后还有多余的字节，会自动忽略。
 
 拿到header 之后，如果判断到 key size和 value size均为 0，则说明读取到了文件的末尾，我们直接返回一个EOF 的错误。否则，再根据 header 中的 key 和 value 的长度信息，判断其值是否大于 0，如果是的话，则说明存在 key 或者value.
 
-我们就将读偏移 offset加上 keySize 和valueSize 的总和，读出一个字节数组，这其中就是实际的 KeyValue 数据，填充到 LogRecord 结构体中。
+将读偏移 offset加上 keySize 和valueSize 的总和，读出一个字节数组，这就是实际的 KeyValue 数据，填充到 LogRecord 结构体中。
 
 最后，需要根据读出的信息，获取到其对应的校验值 CRC，判断和 header 中的 CRC 是否相等，只有完全相等才说明这是一条完整有效的数据，否则说明数据可能被破坏了。
 
-```
-	+-------------+-------------+-------------+--------------+-------------+--------------+
-	| crc 校验值  |  type 类型   |    key size |   value size |      key    |      value   |
-	+-------------+-------------+-------------+--------------+-------------+--------------+
-```
-
-## 迭代器
-
-**遍历数据**时，由于索引类型可能有多种，我们可以定义一个抽象的迭代器接口，让每一个具体的索引去实现这个迭代器，然后我们只需要调用这个迭代器获取索引中的数据。索引迭代器接口方法如下
+![img](./assets/(null)-20240103193706421.(null))
 
 ```C++
-Rewind: 重新回到迭代器的起点，即第一个数据
-Seek: 根据传入的 key 查找到第一个大于 (或小于) 等于的目标 key，根据从这个 key 开始遍历
-Next: 跳转到下一个 key
-Valid: 是否有效，即是否已经遍历完了所有的 key，用于退出遍历
-Key:当前遍历位置的 Key 数据
-Value:当前遍历位置的 Value 数据 （索引信息）
-Close:关闭迭代器，释放相应资源
+// EncodeLogRecord 对 LogRecord 进行编码，返回字节数组及长度
+//  +-------------+-------------+-------------+--------------+-------------+--------------+
+//  | crc 校验值  |  type 类型   |    key size |   value size |      key    |      value   |
+//  +-------------+-------------+-------------+--------------+-------------+--------------+
+//      4字节          1字节        变长（最大5）   变长（最大5）     变长           变长
+func EncodeLogRecord(logRecord *LogRecord) ([]byte, int64) {
+    // 初始化一个 header 部分的字节数组
+    header := make([]byte, maxLogRecordHeaderSize)
+
+    // 第五个字节存储 Type
+    header[4] = logRecord.Type
+    var index = 5
+    // 5 字节之后，存储的是 key 和 value 的长度信息
+    // 使用变长类型，节省空间
+    index += binary.PutVarint(header[index:], int64(len(logRecord.Key)))
+    index += binary.PutVarint(header[index:], int64(len(logRecord.Value)))
+    var size = index + len(logRecord.Key) + len(logRecord.Value)
+    encBytes := make([]byte, size)
+
+    // 将 header 部分的内容拷贝过来
+    copy(encBytes[:index], header[:index])
+    // 将 key 和 value 数据拷贝到字节数组中
+    copy(encBytes[index:], logRecord.Key)
+    copy(encBytes[index+len(logRecord.Key):], logRecord.Value)
+
+    // 对整个 LogRecord 的数据进行 crc 校验
+    crc := crc32.ChecksumIEEE(encBytes[4:])
+    binary.LittleEndian.PutUint32(encBytes[:4], crc)
+
+    return encBytes, int64(size)
+}
 ```
 
-**Iterator** 索引的迭代器实现之后，我们可以在数据库层面增加一个迭代器，提供给用户使用，这样在遍历数据的时候可以更加灵活的获取和控制遍历数据的流程。用户可以传入一个 IteratorOptions 配置项，目前可以指定需要遍历的 Key 前缀，以及指定是否是反向遍历
+## Merge
 
-这个结构体的方法和前面定义的索引迭代器接口基本一样，我们只需要调用索引迭代器的接口，并且在 Next 方法中加上对 Prefix 前缀的处理，以及在 Value 方法中加上从磁盘获取数据的逻辑。
+将活跃文件设置为旧文件，创建一个新的活跃文件，启动一个临时数据库实例，这个实例和正在运行的数据库实例互不冲突，因为它们是不同的进程。遍历旧文件，ReadLogRecord读取logrecord，和内存中的索引位置进行比较，如果有效则重写入merge文件和hint文件。（merge完成，增加一个标识merge完成的文件，否者无效的merge，删除merge目录）
+
+如果是有效的 merge，将merge目录中的数据文件，还有一个对应的 hint 索引文件。将这些数据文件拷贝到原始数据目录中，然后把对应的 hint 索引文件也拷贝过去，并且把临时的merge 目录删除掉，这样下次启动的时候，便能够和原来的正常启动保持一致了。
+
+Merge 优化：我们可以统计失效的数据量，只有当失效的数据占比达到某个比例，才进行merge操作
 
 ## WriteBatch 原子写
 
@@ -55,9 +165,9 @@ Close:关闭迭代器，释放相应资源
 
 将用户的批量操作保存起来，保存到一个内存数据结构中（map），提供一个commit方法，将批量操作全部写入到磁盘中，并更新内存索引
 
-我们可以给这一批数据添加一个唯一标识，一般把它叫做序列号 Seq Number，也可以将其理解为事务 ID。这个seq number 是全局递增的，每一个批次的数据在提交的时候都将获取一个 seq number，并且保证后面的 seq number 一定比前面获取的更大。
+这一批数据添加一个唯一标识，一般把它叫做序列号 Seq Number，即事务 ID。这个seq number 是全局递增的，每一个批次的数据在提交的时候都将获取一个 seq number，并且保证后面的 seq number 一定比前面获取的更大。
 
-提交事务的时候，每一条日志记录LogRecord 都有一个 seg number，并且写到数据文件中，然后我们可以在这一批次的最后增加一个标识事务完成的日志记录。
+提交事务的时候，每一条日志记录LogRecord 都有一个 seq number，并且写到数据文件中，然后我们可以在这一批次的最后增加一个标识事务完成的日志记录。
 
 在数据库启动的时候，如果判断到日志记录有序列号 seq number，那么我们先不直接更新内存索引，而是将它暂存起来，直到读到了一条标识事务完成的记录，说明事务是正常提交的，就可以将这一批数据都更新到内存索引中。
 
@@ -75,69 +185,69 @@ Commit 方法是核心逻辑，我们需要拿到当前最新的 seq number，�
 
 启动数据库的时候，不能直接拿到 LogRecord 就去更新内存索引了，因为LogRecord 有可能是无效的事务的数据，所以我们将其暂存起来，如果读到了一个标识事务完成的数据，才将暂存的对应的事务id 的数据更新到内存索引。
 
-还需要注意的是，我们在遍历数据的时候，还需要更新对应的 seqNo，并找到最大的那个值，方便数据库启动之后，新的 WriteBatch 能够拿到最新的事务序列号。
+在遍历数据的时候，还需要更新对应的 seqNo，并找到最大的那个值，方便数据库启动之后，新的 WriteBatch 能够拿到最新的事务序列号。
 
-（todo：不能并发，只能串行）
+## 文件优化
 
-## Merge
-
-merge清理无效的数据，重写有效的数据，并生成hint file文件
-
-使用一个临时的文件夹，假如叫 merge，在这个临时目录中新启动一个数据库实例，这个实例和正在运行的数据库实例互不冲突，因为它们是不同的进程。将原来的目录中的数据文件逐一读取，并取出其中的日志记录，和内存索引进行比较，如果是有效的，我们将其重写到 merge 这个数据目录中，避免和原来的目录竞争。
-
-生成 hint 索引信息，这个其实比较简单，我们在重写数据到 merge 目录的时候，实际上还是会得到一个位置索引信息，将这个索引和原始的 key 保存到一个新的 hint 文件里就可以了，这个 hint 文件我们还是可以沿用数据文件的结构，也采用日志追加的方式。
-
-**重启校验 merge**
-
-merge 的时候还需要考虑一个点，就是在 merge 的过程当中，如果出现了异常，例如进程退出，或者系统崩溃等导致 merge 没有完成，我们应该如何处理这种情况?
-
-一个简单直观的办法是，我们可以在数据全部重写完成后，在磁盘上增加一个标识 merge 完成的文件，当重启数据库的时候，我们查看其是否有对应的 merge 目录，找到了这个目录之后，说明发生过 merge，然后在这个目录中查找是否有 merge 完成的文件，如果没有的话，则说明这是一次无效的 merge，我们直接将 merge 这个目录删除掉。
-
-如果是有效的 merge，那么这个目录中的数据文件，都是存放的全部有效的数据，然后还有一个对应的 hint 索引文件。我们需要将这些数据文件拷贝到原始数据目录中，然后把对应的 hint 索引文件也拷贝过去，并且把临时的merge 目录删除掉，这样下次启动的时候，便能够和原来的正常启动保持一致了。
-
-还需要注意的一个细节是，我们添加的这个标识 merge 完成的文件中应该记录什么内容呢，或者是空的就可以?
-
-在 merge 的过程当中，可能又有新的数据写进来了，这部分没有参与 merge 的数据，在加载索引的时候，还是需要和原来一致，并不能从 hint 文件中加载。还有便是前面提到了，我们应该将旧的文件删除掉,把 merge 完成的数据文件替换过来，但如果是 merge 过程中新生成的数据文件，我们肯定不能删除掉，所以还是需要知道最近的一个没有参与 merge 的文件的 id。
-
-所以在 merge 完成标识的这个文件中，我们可以记录这个文件id，在后续系统启动的时候能够使用
-
-Merge 优化：我们可以统计失效的数据量，只有当失效的数据占比达到某个比例，才进行merge操作
-
-merge 的时候，我们开启了一个临时目录，并且将有效的数据全部存放到这个临时目录中，我们添加一个获取目录所占容量的方法，然后再获取到所在磁盘的剩余容量，如果merge 后的数据量超过了磁盘的剩余容量，那么直接返回一个磁盘空间不足的错误信息。
-
-## 内存索引
-
-```Go
-// Indexer 抽象索引接口，后续如果想要接入其他的数据结构，则直接实现这个接口即可
-type Indexer interface {
-   // Put 向索引中存储 key 对应的数据位置信息
-   Put(key []byte, pos *data.LogRecordPos) bool
-   // Get 根据 key 取出对应的索引位置信息
-   Get(key []byte) *data.LogRecordPos
-   // Delete 根据 key 删除对应的索引位置信息
-   Delete(key []byte) bool
-   // Size 索引中的数据量
-   Size() int
-   // Iterator 索引迭代器
-   Iterator(reverse bool) Iterator
-   // Close 关闭索引
-   Close() error
-}
-```
-
-设计四种索引，使用btree，自适应基数树，skiplist 做内存索引，使用bplustree做持久化磁盘索引
-
-## 文件IO优化
-
-bitcask目前只支持单进程运行，我们可以加上一个**文件锁**，文件是一种进程间通信的常用方式，有一个系统调用 flock 提供了文件锁的功能，主要保证了多个进程之间的互斥，恰好能够满足我们的需求。
+使用文件锁，保证bitcask只能单进程运行 https://github.com/gofrs/flock
 
 持久化策略，可以在打开数据库的时候，增加一个配置项 BytesPerSync，每次写数据的时候，都记录一下累计写了多少个字节，如果累计值达到了 BytesPerSync，则进行持久化。
 
-使用mmap加速bitcask启动。我们可以提供一个配置项，让用户决定是否在启动的时候使用 MMap，如果是的话，则打开数据文件的时候，我们将按照 MMap IO 的方式初始化IOManager，加载索引时读数据都会使用 mmap。加载索引完成后，我们需要重置我们的10Manager，因为 MMap 只是用于数据库启动，启动完成之后，要将lOManager 切换到原来的 IO 类型。
+### Mmap
+
+https://pkg.go.dev/golang.org/x/exp/mmap
+
+mmap减少内核态到用户态的数据拷贝，使用mmap加速bitcask启动。打开数据文件的时候，我们将按照 MMap IO 的方式初始化IOManager，加载索引时读数据都会使用 mmap。加载索引完成后，我们需要重置我们的ioselector，因为 MMap 只是用于数据库启动，启动完成之后，要将lOManager 切换到原来的 IO 类型。
+
+```C++
+readerAt, err := mmap.Open(fileName)
+readerAt.ReadAt(b, offset)
+```
 
 ## 数据备份
 
 只需要将数据目录拷贝到其他的位置，这样就算原有的目录损坏了，拷贝的目录中仍然存有备份的数据，可以直接在这个新的目录中启动 bitcask，保证数据不丢失。
+
+```C++
+// CopyDir 拷贝数据目录
+func CopyDir(src, dest string, exclude []string) error {
+    // 目标目标不存在则创建
+    fmt.Println(src, dest)
+    if _, err := os.Stat(dest); os.IsNotExist(err) {
+       if err := os.MkdirAll(dest, os.ModePerm); err != nil {
+          return err
+       }
+    }
+
+    return filepath.Walk(src, func(path string, info fs.FileInfo, err error) error {
+       //fileName := strings.Replace(path, src, "", 1)
+       fileName := filepath.Base(path)
+       if fileName == "" {
+          return nil
+       }
+
+       for _, e := range exclude {
+          matched, err := filepath.Match(e, info.Name())
+          if err != nil {
+             return err
+          }
+          if matched {
+             return nil
+          }
+       }
+
+       if info.IsDir() {
+          return os.MkdirAll(filepath.Join(dest, fileName), info.Mode())
+       }
+
+       data, err := os.ReadFile(filepath.Join(src, fileName))
+       if err != nil {
+          return err
+       }
+       return os.WriteFile(filepath.Join(dest, fileName), data, info.Mode())
+    })
+}
+```
 
 # Redis
 
@@ -150,20 +260,29 @@ type metadata struct {
    expire   int64  // 过期时间
    version  int64  // 版本号
    size     uint32 // 数据量
-   head     uint64 // List 数据结构专用
+   
+   head     uint64 // List 数据结构专用 =U64_MAX/2
    tail     uint64 // List 数据结构专用
 }
 ```
 
 String key---type|expire|payload
 
-Hash key---元数据 key|version|filed------value 
+Hash key---元数据 key|version|filed------value
+
+首先根据 key 查询元数据，如果不存在的话则说明 key 不存在，否则判断 value 的类型，如果 value 的类型不是Hash，则直接返回对应的错误然后我们根据 key 和元数据中的 version 字段，以及 field 编码出一个 key，然后根据这个 key 去获取实际的value
 
 Set key---元数据 key|version|member------NULL
 
 List key---元数据 key|version|index------value 
 
 Zset key---元数据 key|version|member------score key|version|score|member-----NULL 
+
+version用于快速删除，version 是递增的，假如 key 被删除之后，我们又重新添加了这个 key，这时候会分配一个新的 version，和之前的version 不一样，所以我们就查不到之前的旧的数据。
+
+## resp协议解析
+
+可以自己实现参考Godis，这里直接使用https://github.com/tidwall/redcon
 
 # refrence
 

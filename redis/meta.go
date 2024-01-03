@@ -73,6 +73,7 @@ func decodeMetadata(buf []byte) *metadata {
 	}
 }
 
+// hash
 type hashInternalKey struct {
 	key     []byte
 	version int64

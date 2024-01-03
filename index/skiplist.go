@@ -8,11 +8,12 @@ import (
 	"sync"
 )
 
+
 const (
-	// 跳表索引最⼤层数，可根据实际情况进⾏调整
-	maxLevel int = 18
-	// 用于决定在哪些层级上创建索引
-	probability float64 = 0.5
+	// Maximum number of levels in a SkipList
+	maxLevel int16 = 18
+	// Probability of increasing the level
+	probability float32 = 0.5
 )
 
 type Node struct {
@@ -23,12 +24,12 @@ type Node struct {
 
 type SkipList struct {
 	head   *Node
-	level  int
+	level  int16
 	length int
 	lock   *sync.RWMutex
 }
 
-func newNode(key []byte, value interface{}, level int) *Node {
+func newNode(key []byte, value interface{}, level int16) *Node {
 	return &Node{
 		key:     key,
 		value:   value,
@@ -46,25 +47,27 @@ func NewSkipList() *SkipList {
 	}
 }
 
-func (sl *SkipList) randomLevel() int {
-	level := 1
-	for rand.Float64() < probability && level < maxLevel {
+func randomLevel() int16 {
+	level := int16(1)
+	for float32(rand.Int31()&0xFFFF) < (probability*0xFFFF) && level < maxLevel {
 		level++
 	}
-	return level
+	return maxLevel
 }
 
+// Put 向索引中存储 key 对应的数据位置信息, 如果键已存在，更新值并返回旧值
 func (sl *SkipList) Put(key []byte, pos *data.LogRecordPos) *data.LogRecordPos {
 	sl.lock.Lock()
 	defer sl.lock.Unlock()
 
-	update := make([]*Node, maxLevel)
+	update := make([]*Node, maxLevel) // 记录每层需要更新的节点
 	current := sl.head
 
+	// 从最高层开始查找 【关键代码】
 	for i := sl.level - 1; i >= 0; i-- {
 		// 在当前层查找插入位置
 		for current.forward[i] != nil && bytes.Compare(current.forward[i].key, key) < 0 {
-			current = current.forward[i]
+			current = current.forward[i] // current.forward[i].key < key
 		}
 		update[i] = current
 	}
@@ -76,7 +79,7 @@ func (sl *SkipList) Put(key []byte, pos *data.LogRecordPos) *data.LogRecordPos {
 		return oldVal.(*data.LogRecordPos)
 	}
 
-	level := sl.randomLevel()
+	level := randomLevel()
 	if level > sl.level {
 		// 如果新节点的层数大于当前层数，需要更新 update 切片
 		for i := sl.level; i < level; i++ {
@@ -86,7 +89,7 @@ func (sl *SkipList) Put(key []byte, pos *data.LogRecordPos) *data.LogRecordPos {
 	}
 
 	newNode := newNode(key, pos, level)
-	for i := 0; i < level; i++ {
+	for i := int16(0); i < level; i++ {
 		// 更新节点的各层指针
 		newNode.forward[i] = update[i].forward[i]
 		update[i].forward[i] = newNode
@@ -110,10 +113,10 @@ func (sl *SkipList) Get(key []byte) *data.LogRecordPos {
 			return current.forward[i].value.(*data.LogRecordPos)
 		}
 	}
-
 	return nil
 }
 
+// Delete 根据 key 删除对应的索引位置信息, 如果键不存在，返回 false
 func (sl *SkipList) Delete(key []byte) (*data.LogRecordPos, bool) {
 	sl.lock.Lock()
 	defer sl.lock.Unlock()
@@ -132,7 +135,7 @@ func (sl *SkipList) Delete(key []byte) (*data.LogRecordPos, bool) {
 	if current.forward[0] != nil && bytes.Equal(current.forward[0].key, key) {
 		// 找到要删除的节点并更新指针
 		target := current.forward[0]
-		for i := 0; i < sl.level; i++ {
+		for i := int16(0); i < sl.level; i++ {
 			if update[i].forward[i] != target {
 				break
 			}
@@ -150,6 +153,8 @@ func (sl *SkipList) Size() int {
 	defer sl.lock.RUnlock()
 	return sl.length
 }
+
+
 
 func (sl *SkipList) Iterator(reverse bool) Iterator {
 	sl.lock.RLock()

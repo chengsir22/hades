@@ -5,10 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="22f94120-abb1-4127-8be9-08e3718bb420" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/index/skiplist.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/index/index.go" beforeDir="false" afterPath="$PROJECT_DIR$/index/index.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/settings/settings.go" beforeDir="false" afterPath="$PROJECT_DIR$/settings/settings.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db.go" beforeDir="false" afterPath="$PROJECT_DIR$/db.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index/skiplist.go" beforeDir="false" afterPath="$PROJECT_DIR$/index/skiplist.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/redis/meta.go" beforeDir="false" afterPath="$PROJECT_DIR$/redis/meta.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -29,9 +30,9 @@
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 3
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
   <component name="ProjectId" id="2XQv8SPhdPusVgFFXgxxApUgSNg" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
@@ -52,7 +53,7 @@
     "WebServerToolWindowFactoryState": "false",
     "go.import.settings.migrated": "true",
     "go.sdk.automatically.set": "true",
-    "last_opened_file_path": "/Users/luhongcheng/daydayUp/_proj/hades",
+    "last_opened_file_path": "/Volumes/T7/_source/bitcask/hades",
     "node.js.detected.package.eslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "nodejs_package_manager_path": "npm"
